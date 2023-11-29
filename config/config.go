@@ -9,6 +9,7 @@ import (
 type Config struct {
 	KeyNotion string
 	Version   string
+	DB_ID     string
 }
 
 func InitConfig() *Config {
@@ -37,6 +38,9 @@ func loadConfig() *Config {
 	}
 	if value, found := os.LookupEnv("VERSION"); found {
 		result.Version = value
+	}
+	if value, found := os.LookupEnv("DB_ID"); found {
+		result.DB_ID = value
 	}
 
 	return result

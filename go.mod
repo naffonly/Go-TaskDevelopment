@@ -6,6 +6,7 @@ require (
 	github.com/dstotijn/go-notion v0.11.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
+	github.com/sirupsen/logrus v1.9.3
 )
 
 require (

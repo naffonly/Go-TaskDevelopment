@@ -19,7 +19,7 @@ func SetupAppRouter() *gin.Engine {
 
 	config := configHandler.InitConfig()
 	notionConfig := util.InitNotionApi(config.KeyNotion)
-	service := serviceHandler.NewTaskDevelompentServiceImpl(notionConfig, config.Version)
+	service := serviceHandler.NewTaskDevelompentServiceImpl(notionConfig, config.Version, config.DB_ID)
 	handlerTaskDev := handler.NewTaskDevelopmentHandler(service)
 
 	public := router.Group("/api")
