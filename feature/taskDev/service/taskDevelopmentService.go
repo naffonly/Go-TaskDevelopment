@@ -4,17 +4,12 @@ import (
 	"NotionTask/util"
 	"context"
 	"encoding/json"
-	_ "encoding/json"
 	"errors"
-	"fmt"
-	_ "fmt"
 	"github.com/dstotijn/go-notion"
 	log "github.com/sirupsen/logrus"
-	_ "io/ioutil"
-	_ "net/http"
+	"net/http"
 	"strings"
 	"time"
-	_ "time"
 )
 
 type TaskDevelopmentServiceInterface interface {
@@ -39,6 +34,7 @@ type notionIntegration struct {
 	Client     *notion.Client
 	Version    string
 	DatabaseID string
+	Url        string
 }
 
 func (n *notionIntegration) GetDataBaseFilter() (*notion.DatabaseQueryResponse, error) {
@@ -62,11 +58,12 @@ func (n *notionIntegration) GetDataBaseFilter() (*notion.DatabaseQueryResponse, 
 	return &result, nil
 }
 
-func NewTaskDevelompentServiceImpl(client *notion.Client, ver string, db string) TaskDevelopmentServiceInterface {
+func NewTaskDevelompentServiceImpl(client *notion.Client, ver string, db string, url string) TaskDevelopmentServiceInterface {
 	return &notionIntegration{
 		Client:     client,
 		Version:    ver,
 		DatabaseID: db,
+		Url:        url,
 	}
 }
 
@@ -110,7 +107,7 @@ func (n *notionIntegration) GetDataDatabaseNotion() (*[]map[string]interface{}, 
 
 	errs := json.Unmarshal([]byte(dataJSON), &dataObject)
 	if errs != nil {
-		fmt.Println(errs.Error())
+		log.Fatal(errs.Error())
 		return nil, err
 	}
 
@@ -194,8 +191,9 @@ func (n *notionIntegration) GetDataDatabaseNotion() (*[]map[string]interface{}, 
 								for _, relation := range relations {
 									if relationMap, isMap := relation.(map[string]interface{}); isMap {
 										if id, exists := relationMap["id"].(string); exists {
+											rs := n.GetDataPageNotion(id)
 											//rs := t.service.GetDataPageNotion(id)
-											slice = append(slice, id)
+											slice = append(slice, rs)
 										}
 									}
 								}
@@ -304,7 +302,7 @@ func (n *notionIntegration) GetDataPageNotion(id string) string {
 
 	errs := json.Unmarshal([]byte(dataJSON), &dataObject)
 	if errs != nil {
-		fmt.Println(errs.Error())
+		log.Fatal(errs.Error())
 		return err.Error()
 	}
 
@@ -338,9 +336,9 @@ func (n *notionIntegration) GetDataPageNotion(id string) string {
 
 func (n *notionIntegration) CheckScedule() string {
 	if tickerRunning {
-		return "ticker sedang berjalan"
+		return "Scedule sedang berjalan"
 	} else {
-		return "ticker tidak sedang berjalan"
+		return "Scedule tidak sedang berjalan"
 	}
 }
 
@@ -351,11 +349,11 @@ func (n *notionIntegration) StopScedule() error {
 		tickerRunning = false
 		return nil
 	}
-	return errors.New("ticker tidak sedang berjalan")
+	return errors.New("Scedule tidak sedang berjalan")
 }
 
 func (n *notionIntegration) GetDataScdule() error {
-
+	client := &http.Client{}
 	if !tickerRunning {
 		ticker = time.NewTicker(1 * time.Minute)
 		tickerRunning = true
@@ -365,10 +363,22 @@ func (n *notionIntegration) GetDataScdule() error {
 			for {
 				select {
 				case <-ticker.C:
-					fmt.Println("Ticker sedang berjalan : ", time.Now())
+					log.Info("Scedule sedang berjalan : ", time.Now())
+					rs, _ := n.GetDataDatabaseNotion()
+					requestBody, err := json.Marshal(rs)
+					if err != nil {
+						log.Fatal("Error encoding JSON:", err)
+						return
+					}
+
+					errs := util.SendToWebhook(*client, n.Url, requestBody)
+					if errs != nil {
+						log.Fatal("Error encoding JSON:", errs)
+						return
+					}
 
 				case <-stopSignal:
-					fmt.Println("Ticker telah dihentikan : ", time.Now())
+					log.Info("Scedule telah dihentikan : ", time.Now())
 					tickerRunning = false
 					return
 				}
@@ -376,5 +386,6 @@ func (n *notionIntegration) GetDataScdule() error {
 		}()
 		return nil
 	}
-	return errors.New("ticker Sedang Berjalan")
+	log.Info("Scedule Sedang Berjalan")
+	return errors.New("Scedule Sedang Berjalan")
 }

@@ -59,7 +59,7 @@ func (t *taskDevelopmentHandler) StopScedule() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := t.service.StopScedule()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
 			c.Abort()
