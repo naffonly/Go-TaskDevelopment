@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-
 	"net/http"
 )
 
@@ -20,10 +19,70 @@ type TaskDevelopmentInterface interface {
 	GetData() gin.HandlerFunc
 	GetDatabasePropertiesNotion() gin.HandlerFunc
 	GetDataDatabaseNotion() gin.HandlerFunc
+	GetDataPageNotion() gin.HandlerFunc
+	GetScedule() gin.HandlerFunc
+	StopScedule() gin.HandlerFunc
+	CheckScedule() gin.HandlerFunc
+	GetDataFilter() gin.HandlerFunc
 }
 
 type taskDevelopmentHandler struct {
 	service service.TaskDevelopmentServiceInterface
+}
+
+func (t *taskDevelopmentHandler) GetDataFilter() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		rs, err := t.service.GetDataBaseFilter()
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{
+				"err": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		c.JSON(http.StatusOK, rs)
+	}
+}
+
+func (t *taskDevelopmentHandler) CheckScedule() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		rs := t.service.CheckScedule()
+		c.JSON(http.StatusOK, gin.H{
+			"msg": rs,
+		})
+	}
+}
+
+func (t *taskDevelopmentHandler) StopScedule() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := t.service.StopScedule()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+		c.JSON(200, gin.H{"message": "Jadwal fungsi telah dihentikan"})
+
+	}
+}
+
+func (t *taskDevelopmentHandler) GetScedule() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := t.service.GetDataScdule()
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			c.Abort()
+			return
+		}
+		c.JSON(200, gin.H{"message": "Jadwal fungsi telah dimulai"})
+	}
 }
 
 func NewTaskDevelopmentHandler(service service.TaskDevelopmentServiceInterface) TaskDevelopmentInterface {
@@ -61,7 +120,6 @@ func (t *taskDevelopmentHandler) GetDatabasePropertiesNotion() gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, model.FormatResponse("Success Found Property Database Notion", dataResult))
 
-		//
 		//dataResponse := make(map[string]string)
 		//for key, value := range dataResult {
 		//	if prop, ok := value.(map[string]interface{}); ok {
@@ -79,6 +137,23 @@ func (t *taskDevelopmentHandler) GetDatabasePropertiesNotion() gin.HandlerFunc {
 
 func (t *taskDevelopmentHandler) GetDataDatabaseNotion() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		panic("implement me")
+
+		result, err := t.service.GetDataDatabaseNotion()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, model.FormatResponse(err.Error(), nil))
+			c.Abort()
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+func (t *taskDevelopmentHandler) GetDataPageNotion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		rs := t.service.GetDataPageNotion(id)
+
+		c.JSON(http.StatusOK, rs)
 	}
 }

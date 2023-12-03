@@ -7,9 +7,11 @@ import (
 )
 
 type Config struct {
-	KeyNotion string
-	Version   string
-	DB_ID     string
+	KeyNotion   string
+	Version     string
+	DB_ID       string
+	WebHook_URL string
+	WebHook_ID  string
 }
 
 func InitConfig() *Config {
@@ -41,6 +43,12 @@ func loadConfig() *Config {
 	}
 	if value, found := os.LookupEnv("DB_ID"); found {
 		result.DB_ID = value
+	}
+	if value, found := os.LookupEnv("WEBHOOK_URL"); found {
+		result.WebHook_URL = value
+	}
+	if value, found := os.LookupEnv("WEBHOOK_ID"); found {
+		result.WebHook_ID = value
 	}
 
 	return result

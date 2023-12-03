@@ -1,14 +1,15 @@
 package model
 
+import "encoding/json"
+
 type TaskNotionRequest struct {
 }
 
-type TaskNotionResponse struct {
+type TaskNotionModel struct {
 }
 
-type PropertyResponse struct {
-	ActualHour string `json:"actualHour"`
-	ArchivedAt string `json:"archivedAt"`
+type ModelProperty struct {
+	Properties []interface{} `json:"properties"`
 }
 
 func FormatResponse(message string, data any) map[string]any {
@@ -18,4 +19,15 @@ func FormatResponse(message string, data any) map[string]any {
 		response["data"] = data
 	}
 	return response
+}
+
+func PropertiesToResponse(data []interface{}) (string, error) {
+	// Mengonversi data menjadi representasi JSON
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+
+	// Mengembalikan data dalam bentuk string
+	return string(jsonData), nil
 }
